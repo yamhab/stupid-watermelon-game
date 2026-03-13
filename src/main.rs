@@ -27,8 +27,8 @@ impl Fruit {
 fn window_conf() -> Conf {
     Conf {
         window_title: "Stupid Watermelon Game".to_string(),
-        window_width: 600,
-        window_height: 500,
+        window_width: 700,
+        window_height: 600,
         window_resizable: false,
         ..Default::default()
     }
@@ -37,7 +37,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut physics_pipeline = PhysicsPipeline::new();
-    let gravity = vector![0.0, 5.0];
+    let gravity = Vector::new(0.0, 5.0);
     let integration_parameters = IntegrationParameters::default();
     let mut island_manager = IslandManager::new();
     let mut broad_phase = DefaultBroadPhase::new();
@@ -47,7 +47,6 @@ async fn main() {
     let mut impulse_joint_set = ImpulseJointSet::new();
     let mut multibody_joint_set = MultibodyJointSet::new();
     let mut ccd_solver = CCDSolver::new();
-    let mut query_pipeline = QueryPipeline::new();
     let physics_hooks = ();
     let event_handler = ();
 
@@ -66,7 +65,7 @@ async fn main() {
 
     loop {
         physics_pipeline.step(
-            &gravity,
+            gravity,
             &integration_parameters,
             &mut island_manager,
             &mut broad_phase,
@@ -76,7 +75,6 @@ async fn main() {
             &mut impulse_joint_set,
             &mut multibody_joint_set,
             &mut ccd_solver,
-            Some(&mut query_pipeline),
             &physics_hooks,
             &event_handler,
         );
@@ -123,10 +121,10 @@ async fn main() {
 fn create_container(rigid_body_set: &mut RigidBodySet, collider_set: &mut ColliderSet) {
     let container_collider = ColliderBuilder::polyline(
         vec![
-            point![0.75, 0.5],
-            point![1.0, 2.0],
-            point![2.0, 2.0],
-            point![2.25, 0.5],
+            Vector::new(0.75, 0.5),
+            Vector::new(1.0, 2.0),
+            Vector::new(2.0, 2.0),
+            Vector::new(2.25, 0.5),
         ],
         None,
     )
@@ -168,7 +166,7 @@ fn move_current_fruit(
     };
     let current_fruit = rigid_body_set.get_mut(fruit_handle).unwrap();
     current_fruit.set_translation(
-        vector!((mouse_position().0 / 200.0).clamp(0.80, 2.20,), 0.25),
+        Vector::new((mouse_position().0 / 200.0).clamp(0.80, 2.20), 0.25),
         true,
     );
 }
@@ -218,7 +216,7 @@ fn collide_fruit(
         let mut collider1 = collider_set.get(contact_pair.collider1).unwrap();
         let mut collider2 = collider_set.get(contact_pair.collider2).unwrap();
         if collider1.user_data != collider2.user_data
-            || !contact_pair.has_any_active_contact
+            || !contact_pair.has_any_active_contact()
             || collider1.user_data == 11
             || collider2.user_data == 11
         {
